@@ -1,0 +1,50 @@
+// Make sure u have installed AWS CodeDeploy, maven, pipeline and git plugins
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/your-repo/your-java-project.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                // Assuming you use Maven
+                sh 'mvn clean install'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                // Run unit tests
+                sh 'mvn test'
+            }
+        }
+
+        stage('Deploy to AWS') {
+            steps {
+                // Deploy to AWS using AWS CLI or AWS CodeDeploy
+                // Example with AWS CLI and Elastic Beanstalk
+                sh '''
+                    aws configure set aws_access_key_id YOUR_ACCESS_KEY
+                    aws configure set aws_secret_access_key YOUR_SECRET_KEY
+                    aws configure set default.region YOUR_AWS_REGION
+
+                    # Deploy to Elastic Beanstalk
+                    aws elasticbeanstalk create-application-version --application-name your-app-name --version-label your-version-label --source-bundle S3Bucket="your-bucket-name",S3Key="your-app.zip"
+
+                    aws elasticbeanstalk update-environment --environment-name your-env-name --version-label your-version-label
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            // Clean up resources, notify, etc.
+            echo 'Pipeline completed.'
+        }
+    }
+}
